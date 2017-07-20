@@ -31,28 +31,48 @@
 #include "debug.h"
 
 #include <sys/types.h>
+#ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
+#endif
 #include <sys/param.h> /* required for BSD4_4 define */
+#ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
 #include <sys/stat.h>
 #include <sys/time.h>
+#ifdef HAVE_SYS_UN_H
 #include <sys/un.h>
+#endif
+#ifdef HAVE_SYS_WAIT_H
 #include <sys/wait.h>
+#endif
+#ifdef HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
+#endif
 
 #include <stdio.h>
 #include <errno.h>
 #include <fcntl.h>
+#ifdef HAVE_GRP_H
 #include <grp.h>
+#endif
 #include <limits.h>
+#ifdef HAVE_PWD_H
 #include <pwd.h>
+#endif
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_TERMIOS_H
 #include <termios.h>
+#endif
 #include <unistd.h>
+#ifndef DISABLE_SYSLOG
 #include <syslog.h>
+#endif
+#ifdef HAVE_NETDB_H
 #include <netdb.h>
+#endif
 #include <ctype.h>
 #include <stdarg.h>
 #include <dirent.h>
@@ -78,7 +98,9 @@
 #include <netinet/in.h>
 #endif
 
+#ifdef HAVE_ARPA_INET_H
 #include <arpa/inet.h>
+#endif
 
 /* netbsd 1.6 needs this to be included before netinet/ip.h for some
  * undocumented reason */
@@ -86,7 +108,9 @@
 #include <netinet/in_systm.h>
 #endif
 
+#ifdef HAVE_NETINET_IP_H
 #include <netinet/ip.h>
+#endif
 
 #ifdef HAVE_NETINET_TCP_H
 #include <netinet/tcp.h>
