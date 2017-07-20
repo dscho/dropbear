@@ -340,8 +340,12 @@ AC_CHECK_TYPE([socklen_t], ,[
 	for arg2 in "struct sockaddr" void; do
 		for t in int size_t unsigned long "unsigned long"; do
 		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#ifdef __MINGW32__
+typedef int socklen_t;
+#else
 #include <sys/types.h>
 #include <sys/socket.h>
+#endif
 
 			int getpeername (int, $arg2 *, $t *);
 		]],[[
