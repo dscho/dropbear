@@ -56,7 +56,7 @@ LTC_EXPORT int   LTC_CALL XSTRCMP(const char *s1, const char *s2);
  */
 
 /* detect x86-32 machines somewhat */
-#if !defined(__STRICT_ANSI__) && (defined(INTEL_CC) || (defined(_MSC_VER) && defined(WIN32)) || (defined(__GNUC__) && (defined(__DJGPP__) || defined(__CYGWIN__) || defined(__MINGW32__) || defined(__i386__))))
+#if !defined(__STRICT_ANSI__) && (defined(INTEL_CC) || (defined(_MSC_VER) && defined(WIN32)) || (defined(__GNUC__) && (defined(__DJGPP__) || defined(__CYGWIN__) || (defined(__MINGW32__) && !defined(__x86_64__)) || defined(__i386__))))
    #define ENDIAN_LITTLE
    #define ENDIAN_32BITWORD
    #define LTC_FAST
@@ -74,7 +74,11 @@ LTC_EXPORT int   LTC_CALL XSTRCMP(const char *s1, const char *s2);
    #define ENDIAN_LITTLE
    #define ENDIAN_64BITWORD
    #define LTC_FAST
-   #define LTC_FAST_TYPE    unsigned long
+   #ifdef __MINGW32__
+      #define LTC_FAST_TYPE    unsigned long long
+   #else
+      #define LTC_FAST_TYPE    unsigned long
+   #endif
 #endif
 
 /* detect PPC32 */
