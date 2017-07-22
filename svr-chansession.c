@@ -93,14 +93,17 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 	int status;
 	pid_t pid;
 	unsigned int i;
+#ifndef __MINGW32__
 	struct sigaction sa_chld;
 	struct exitinfo *exit = NULL;
+#endif
 
 	const int saved_errno = errno;
 
 	/* Make channel handling code look for closed channels */
 	ses.channel_signal_pending = 1;
 
+#ifndef __MINGW32__
 	TRACE(("enter sigchld handler"))
 	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
 		TRACE(("sigchld handler: pid %d", pid))
@@ -154,6 +157,7 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 	sigemptyset(&sa_chld.sa_mask);
 	sigaction(SIGCHLD, &sa_chld, NULL);
 	TRACE(("leave sigchld handler"))
+#endif
 
 	errno = saved_errno;
 }
@@ -204,6 +208,7 @@ static void send_msg_chansess_exitsignal(struct Channel * channel,
 
 	CHECKCLEARTOWRITE();
 
+#ifndef __MINGW32__
 	/* we check that we can match a signal name, otherwise
 	 * don't send anything */
 	for (i = 0; signames[i].name != NULL; i++) {
@@ -212,6 +217,7 @@ static void send_msg_chansess_exitsignal(struct Channel * channel,
 			break;
 		}
 	}
+#endif /* !MINGW32 */
 
 	if (signame == NULL) {
 		return;
@@ -416,6 +422,7 @@ static int sessionsignal(struct ChanSess *chansess) {
 
 	signame = buf_getstring(ses.payload, NULL);
 
+#ifndef __MINGW32__
 	i = 0;
 	while (signames[i].name != 0) {
 		if (strcmp(signames[i].name, signame) == 0) {
@@ -424,6 +431,7 @@ static int sessionsignal(struct ChanSess *chansess) {
 		}
 		i++;
 	}
+#endif /* !MINGW32 */
 
 	m_free(signame);
 
@@ -432,9 +440,14 @@ static int sessionsignal(struct ChanSess *chansess) {
 		return DROPBEAR_FAILURE;
 	}
 			
+#ifdef __MINGW32__
+	fprintf(stderr, "TODO!\n");
+	return DROPBEAR_FAILURE;
+#else
 	if (kill(chansess->pid, sig) < 0) {
 		return DROPBEAR_FAILURE;
 	} 
+#endif
 
 	return DROPBEAR_SUCCESS;
 }
@@ -461,7 +474,7 @@ static int sessionwinchange(struct ChanSess *chansess) {
 }
 
 static void get_termmodes(struct ChanSess *chansess) {
-
+#ifndef __MINGW32__
 	struct termios termio;
 	unsigned char opcode;
 	unsigned int value;
@@ -549,13 +562,14 @@ static void get_termmodes(struct ChanSess *chansess) {
 		dropbear_log(LOG_INFO, "Error setting terminal attributes");
 	}
 	TRACE(("leave get_termmodes"))
+#endif
 }
 
 /* Set up a session pty which will be used to execute the shell or program.
  * The pty is allocated now, and kept for when the shell/program executes.
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 static int sessionpty(struct ChanSess * chansess) {
-
+#ifndef __MINGW32__
 	unsigned int termlen;
 	char namebuf[65];
 	struct passwd * pw = NULL;
@@ -600,6 +614,7 @@ static int sessionpty(struct ChanSess * chansess) {
 	get_termmodes(chansess);
 
 	TRACE(("leave sessionpty"))
+#endif /* !MINGW32 */
 	return DROPBEAR_SUCCESS;
 }
 
@@ -766,7 +781,10 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
  * redirection as appropriate.
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
-
+#ifdef __MINGW32__
+	dropbear_log(LOG_WARNING, "%s:%d: TODO", __FILE__, __LINE__);
+	return DROPBEAR_FAILURE;
+#else
 	pid_t pid;
 	struct logininfo *li = NULL;
 #ifdef DO_MOTD
@@ -872,6 +890,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 	TRACE(("leave ptycommand"))
 	return DROPBEAR_SUCCESS;
+#endif /* !MINGW32 */
 }
 
 /* Add the pid of a child to the list for exit-handling */
@@ -927,6 +946,7 @@ static void execchild(void *user_data) {
 #endif /* HAVE_CLEARENV */
 #endif /* DEBUG_VALGRIND */
 
+#ifndef __MINGW32__
 	/* We can only change uid/gid as root ... */
 	if (getuid() == 0) {
 
@@ -950,6 +970,7 @@ static void execchild(void *user_data) {
 			dropbear_exit("Couldn't	change user as non-root");
 		}
 	}
+#endif /* !MINGW32 */
 
 	/* set env vars */
 	addnewvar("USER", ses.authstate.pw_name);
@@ -1003,7 +1024,7 @@ static void execchild(void *user_data) {
 /* Set up the general chansession environment, in particular child-exit
  * handling */
 void svr_chansessinitialise() {
-
+#ifndef __MINGW32__
 	struct sigaction sa_chld;
 
 	/* single child process intially */
@@ -1018,7 +1039,7 @@ void svr_chansessinitialise() {
 	if (sigaction(SIGCHLD, &sa_chld, NULL) < 0) {
 		dropbear_exit("signal() error");
 	}
-	
+#endif /* !MINGW32 */
 }
 
 /* add a new environment variable, allocating space for the entry */

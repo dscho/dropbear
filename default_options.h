@@ -88,11 +88,20 @@ much traffic. */
 #endif
 
 /* Enable Authentication Agent Forwarding */
+#ifdef __MINGW32__
+#ifndef DROPBEAR_SVR_AGENTFWD
+#define DROPBEAR_SVR_AGENTFWD 0
+#endif
+#ifndef DROPBEAR_CLI_AGENTFWD
+#define DROPBEAR_CLI_AGENTFWD 0
+#endif
+#else
 #ifndef DROPBEAR_SVR_AGENTFWD
 #define DROPBEAR_SVR_AGENTFWD 1
 #endif
 #ifndef DROPBEAR_CLI_AGENTFWD
 #define DROPBEAR_CLI_AGENTFWD 1
+#endif
 #endif
 
 
@@ -381,7 +390,7 @@ Homedir is prepended unless path begins with / */
 #endif
 
 /* Default maximum number of failed authentication tries (server option) */
-/* -T runtime option overrides */
+/* -T server option overrides */
 #ifndef MAX_AUTH_TRIES
 #define MAX_AUTH_TRIES 10
 #endif

@@ -89,10 +89,12 @@ static void main_inetd() {
 	m_free(host);
 	m_free(port);
 
+#ifndef __MINGW32__
 	/* Don't check the return value - it may just fail since inetd has
 	 * already done setsid() after forking (xinetd on Darwin appears to do
 	 * this */
 	setsid();
+#endif /* !MINGW32 */
 
 	/* Start service program 
 	 * -1 is a dummy childpipe, just something we can close() without 
@@ -261,6 +263,10 @@ static void main_noinetd() {
 
 			seedrandom();
 
+#ifdef __MINGW32__
+			dropbear_log(LOG_WARNING, "%s:%d: TODO", __FILE__, __LINE__);
+			goto out;
+#else
 			if (pipe(childpipe) < 0) {
 				TRACE(("error creating child pipe"))
 				goto out;
@@ -317,7 +323,7 @@ static void main_noinetd() {
 				/* don't return */
 				dropbear_assert(0);
 			}
-
+#endif /* !MINGW32 */
 out:
 			/* This section is important for the parent too */
 			m_close(childsock);
@@ -334,6 +340,7 @@ out:
 
 /* catch + reap zombie children */
 static void sigchld_handler(int UNUSED(unused)) {
+#ifndef __MINGW32__
 	struct sigaction sa_chld;
 
 	const int saved_errno = errno;
@@ -347,6 +354,7 @@ static void sigchld_handler(int UNUSED(unused)) {
 		dropbear_exit("signal() error");
 	}
 	errno = saved_errno;
+#endif /* !MINGW32 */
 }
 
 /* catch any segvs */
@@ -364,8 +372,9 @@ static void sigintterm_handler(int UNUSED(unused)) {
 
 /* Things used by inetd and non-inetd modes */
 static void commonsetup() {
-
+#ifndef __MINGW32__
 	struct sigaction sa_chld;
+#endif /* !MINGW32 */
 #ifndef DISABLE_SYSLOG
 	if (opts.usingsyslog) {
 		startsyslog(PROGNAME);
@@ -377,10 +386,16 @@ static void commonsetup() {
 #ifndef DEBUG_VALGRIND
 		signal(SIGTERM, sigintterm_handler) == SIG_ERR ||
 #endif
-		signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
+#ifdef __MINGW32__
+		0
+#else
+		signal(SIGPIPE, SIG_IGN) == SIG_ERR
+#endif /* !MINGW32 */
+		) {
 		dropbear_exit("signal() error");
 	}
 
+#ifndef __MINGW32__
 	/* catch and reap zombie children */
 	sa_chld.sa_handler = sigchld_handler;
 	sa_chld.sa_flags = SA_NOCLDSTOP;
@@ -391,6 +406,7 @@ static void commonsetup() {
 	if (signal(SIGSEGV, sigsegv_handler) == SIG_ERR) {
 		dropbear_exit("signal() error");
 	}
+#endif
 
 	crypto_init();
 

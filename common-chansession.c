@@ -24,6 +24,7 @@
 
 #include "chansession.h"
 
+#ifndef __MINGW32__
 /* Mapping of signal values to ssh signal strings */
 const struct SigMap signames[] = {
 	{SIGABRT, "ABRT"},
@@ -41,3 +42,4 @@ const struct SigMap signames[] = {
 	{SIGUSR2, "USR2"},
 	{0, NULL}
 };
+#endif

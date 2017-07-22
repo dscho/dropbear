@@ -43,10 +43,11 @@ void cancel_connect(struct dropbear_progress_connection *c);
 
 void connect_set_writequeue(struct dropbear_progress_connection *c, struct Queue *writequeue);
 
-/* TODO: writev #ifdef guard */
+#ifdef HAVE_WRITEV
 /* Fills out iov which contains iov_count slots, returning the number filled in iov_count */
 void packet_queue_to_iovec(struct Queue *queue, struct iovec *iov, unsigned int *iov_count);
 void packet_queue_consume(struct Queue *queue, ssize_t written);
+#endif
 
 #if DROPBEAR_SERVER_TCP_FAST_OPEN
 /* Try for any Linux builds, will fall back if the kernel doesn't support it */

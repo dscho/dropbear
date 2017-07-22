@@ -272,7 +272,9 @@ struct clientsession {
 	unsigned donefirstkex : 1; /* Set when we set sentnewkeys, never reset */
 
 	int tty_raw_mode; /* Whether we're in raw mode (and have to clean up) */
+#ifdef HAVE_TERMIOS_H
 	struct termios saved_tio;
+#endif
 	int stdincopy;
 	int stdinflags;
 	int stdoutcopy;

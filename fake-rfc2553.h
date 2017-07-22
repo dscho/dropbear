@@ -51,6 +51,7 @@
 /*
  * First, socket and INET6 related definitions 
  */
+#ifndef WINSOCK_VERSION
 #ifndef HAVE_STRUCT_SOCKADDR_STORAGE
 # define	_SS_MAXSIZE	128	/* Implementation specific max size */
 # define       _SS_PADSIZE     (_SS_MAXSIZE - sizeof (struct sockaddr))
@@ -60,6 +61,7 @@ struct sockaddr_storage {
 };
 # define ss_family ss_sa.sa_family
 #endif /* !HAVE_STRUCT_SOCKADDR_STORAGE */
+#endif /* !WINSOCK_VERSION */
 
 #ifndef IN6_IS_ADDR_LOOPBACK
 # define IN6_IS_ADDR_LOOPBACK(a) \
@@ -67,6 +69,7 @@ struct sockaddr_storage {
 	 ((u_int32_t *)(a))[2] == 0 && ((u_int32_t *)(a))[3] == htonl(1))
 #endif /* !IN6_IS_ADDR_LOOPBACK */
 
+#ifndef WINSOCK_VERSION
 #ifndef HAVE_STRUCT_IN6_ADDR
 struct in6_addr {
 	u_int8_t	s6_addr[16];
@@ -82,6 +85,7 @@ struct sockaddr_in6 {
 	u_int32_t	sin6_scope_id;
 };
 #endif /* !HAVE_STRUCT_SOCKADDR_IN6 */
+#endif /* !WINSOCK_VERSION */
 
 #ifndef AF_INET6
 /* Define it to something that should never appear */
@@ -135,6 +139,7 @@ struct sockaddr_in6 {
 # define EAI_FAMILY	(INT_MAX - 5)
 #endif
 
+#ifndef WINSOCK_VERSION
 #ifndef HAVE_STRUCT_ADDRINFO
 struct addrinfo {
 	int	ai_flags;	/* AI_PASSIVE, AI_CANONNAME */
@@ -147,7 +152,9 @@ struct addrinfo {
 	struct addrinfo *ai_next;	/* next structure in linked list */
 };
 #endif /* !HAVE_STRUCT_ADDRINFO */
+#endif /* !WINSOCK_VERSION */
 
+#ifndef WINSOCK_VERSION
 #ifndef HAVE_GETADDRINFO
 #ifdef getaddrinfo
 # undef getaddrinfo
@@ -161,17 +168,20 @@ int getaddrinfo(const char *, const char *,
 #define gai_strerror(a)		(_ssh_compat_gai_strerror(a))
 char *gai_strerror(int);
 #endif /* !HAVE_GAI_STRERROR */
+#endif /* !WINSOCK_VERSION */
 
 #ifndef HAVE_FREEADDRINFO
 #define freeaddrinfo(a)		(ssh_freeaddrinfo(a))
 void freeaddrinfo(struct addrinfo *);
 #endif /* !HAVE_FREEADDRINFO */
 
+#ifndef WINSOCK_VERSION
 #ifndef HAVE_GETNAMEINFO
 #define getnameinfo(a,b,c,d,e,f,g) (ssh_getnameinfo(a,b,c,d,e,f,g))
 int getnameinfo(const struct sockaddr *, size_t, char *, size_t, 
     char *, size_t, int);
 #endif /* !HAVE_GETNAMEINFO */
+#endif /* !WINSOCK_VERSION */
 
 #endif /* !_FAKE_RFC2553_H */
 

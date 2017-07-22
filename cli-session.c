@@ -150,11 +150,17 @@ static void cli_session_init(pid_t proxy_cmd_pid) {
 	/* We store std{in,out,err}'s flags, so we can set them back on exit
 	 * (otherwise busybox's ash isn't happy */
 	cli_ses.stdincopy = dup(STDIN_FILENO);
+#ifndef __MINGW32__
 	cli_ses.stdinflags = fcntl(STDIN_FILENO, F_GETFL, 0);
+#endif /* !MINGW32 */
 	cli_ses.stdoutcopy = dup(STDOUT_FILENO);
+#ifndef __MINGW32__
 	cli_ses.stdoutflags = fcntl(STDOUT_FILENO, F_GETFL, 0);
+#endif /* !MINGW32 */
 	cli_ses.stderrcopy = dup(STDERR_FILENO);
+#ifndef __MINGW32__
 	cli_ses.stderrflags = fcntl(STDERR_FILENO, F_GETFL, 0);
+#endif /* !MINGW32 */
 
 	cli_ses.retval = EXIT_SUCCESS; /* Assume it's clean if we don't get a
 									  specific exit status */
@@ -347,7 +353,9 @@ void kill_proxy_command(void) {
 	 */
 	if (cli_ses.proxy_cmd_pid > 1) {
 		TRACE(("killing proxy command with PID='%d'", cli_ses.proxy_cmd_pid));
+#ifndef __MINGW32__
 		kill(cli_ses.proxy_cmd_pid, SIGHUP);
+#endif /* !MINGW32 */
 	}
 }
 
@@ -362,9 +370,11 @@ static void cli_session_cleanup(void) {
 	/* Set std{in,out,err} back to non-blocking - busybox ash dies nastily if
 	 * we don't revert the flags */
 	/* Ignore return value since there's nothing we can do */
+#ifndef __MINGW32__
 	(void)fcntl(cli_ses.stdincopy, F_SETFL, cli_ses.stdinflags);
 	(void)fcntl(cli_ses.stdoutcopy, F_SETFL, cli_ses.stdoutflags);
 	(void)fcntl(cli_ses.stderrcopy, F_SETFL, cli_ses.stderrflags);
+#endif /* !MINGW32 */
 
 	cli_tty_cleanup();
 

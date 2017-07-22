@@ -326,6 +326,9 @@ static void printpubkey(sign_key * key, int keytype) {
 
 	/* a user@host comment is informative */
 	username = "";
+#ifdef __MINGW32__
+	strcpy(hostname, "unknown");
+#else
 	pw = getpwuid(getuid());
 	if (pw) {
 		username = pw->pw_name;
@@ -333,6 +336,7 @@ static void printpubkey(sign_key * key, int keytype) {
 
 	gethostname(hostname, sizeof(hostname));
 	hostname[sizeof(hostname)-1] = '\0';
+#endif /* !MINGW32 */
 
 	printf("Public key portion is:\n%s %s %s@%s\nFingerprint: %s\n",
 			typestring, base64key, username, hostname, fp);

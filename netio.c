@@ -201,7 +201,11 @@ void handle_connect_fds(fd_set *writefd) {
 	m_list_elem *iter;
 	TRACE(("enter handle_connect_fds"))
 	for (iter = ses.conn_pending.first; iter; iter = iter->next) {
+#ifdef __MINGW32__
+		char val;
+#else
 		int val;
+#endif
 		socklen_t vallen = sizeof(val);
 		struct dropbear_progress_connection *c = iter->item;
 
@@ -240,6 +244,7 @@ void connect_set_writequeue(struct dropbear_progress_connection *c, struct Queue
 	c->writequeue = writequeue;
 }
 
+#ifdef HAVE_WRITEV
 void packet_queue_to_iovec(struct Queue *queue, struct iovec *iov, unsigned int *iov_count) {
 	struct Link *l;
 	unsigned int i;
@@ -263,6 +268,7 @@ void packet_queue_to_iovec(struct Queue *queue, struct iovec *iov, unsigned int 
 		iov[i].iov_len = len;
 	}
 }
+#endif
 
 void packet_queue_consume(struct Queue *queue, ssize_t written) {
 	buffer *writebuf;
@@ -427,7 +433,11 @@ int dropbear_listen(const char* address, const char* port,
 
 #if defined(IPPROTO_IPV6) && defined(IPV6_V6ONLY)
 		if (res->ai_family == AF_INET6) {
+#ifdef __MINGW32__
+			char on = 1;
+#else
 			int on = 1;
+#endif
 			if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, 
 						&on, sizeof(on)) == -1) {
 				dropbear_log(LOG_WARNING, "Couldn't set IPV6_V6ONLY");

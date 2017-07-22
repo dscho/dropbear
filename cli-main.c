@@ -69,9 +69,11 @@ int main(int argc, char ** argv) {
 	TRACE(("user='%s' host='%s' port='%s'", cli_opts.username,
 				cli_opts.remotehost, cli_opts.remoteport))
 
+#ifndef __MINGW32__
 	if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
 		dropbear_exit("signal() error");
 	}
+#endif /* !MINGW32 */
 
 	pid_t proxy_cmd_pid = 0;
 #if DROPBEAR_CLI_PROXYCMD
@@ -80,7 +82,12 @@ int main(int argc, char ** argv) {
 		m_free(cli_opts.proxycmd);
 		if (signal(SIGINT, kill_proxy_sighandler) == SIG_ERR ||
 			signal(SIGTERM, kill_proxy_sighandler) == SIG_ERR ||
-			signal(SIGHUP, kill_proxy_sighandler) == SIG_ERR) {
+#ifdef __MINGW32__
+			0
+#else
+			signal(SIGHUP, kill_proxy_sighandler) == SIG_ERR
+#endif /* !MINGW32 */
+			) {
 			dropbear_exit("signal() error");
 		}
 	} else

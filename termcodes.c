@@ -25,6 +25,7 @@
 #include "includes.h"
 #include "termcodes.h"
 
+#ifndef __MINGW32__
 const struct TermCode termcodes[MAX_TERMCODE+1] = {
 
 		{0, 0}, /* TTY_OP_END */
@@ -211,3 +212,4 @@ const struct TermCode termcodes[MAX_TERMCODE+1] = {
 		{PARODD, TERMCODE_CONTROL}
 		/* 94 */
 };
+#endif

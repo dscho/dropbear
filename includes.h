@@ -67,7 +67,13 @@
 #include <termios.h>
 #endif
 #include <unistd.h>
-#ifndef DISABLE_SYSLOG
+#ifdef DISABLE_SYSLOG
+#define LOG_INFO -1
+#define LOG_WARNING -1
+#define LOG_ERR -1
+#define LOG_NOTICE -1
+#define LOG_DEBUG -1
+#else
 #include <syslog.h>
 #endif
 #ifdef HAVE_NETDB_H
@@ -183,6 +189,15 @@ typedef u_int32_t uint32_t;
 #ifdef HAVE_LINUX_PKT_SCHED_H
 #include <linux/types.h>
 #include <linux/pkt_sched.h>
+#endif
+
+#ifdef __MINGW32__
+#undef socklen_t
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#define SHUT_RD SD_RECEIVE
+#define SHUT_WR SD_SEND
+#define SHUT_RDWR SD_BOTH
 #endif
 
 #include "fake-rfc2553.h"

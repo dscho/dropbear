@@ -125,7 +125,7 @@ AC_CANONICAL_HOST
 
 case "$host" in
 
-*-*-linux*)
+*-*-linux*|*-*-mingw32*)
 	no_ptmx_check=1
 	;;
 

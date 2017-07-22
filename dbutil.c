@@ -214,7 +214,7 @@ void dropbear_trace2(const char* format, ...) {
 #endif /* DEBUG_TRACE */
 
 /* Connect to a given unix socket. The socket is blocking */
-#ifdef ENABLE_CONNECT_UNIX
+#if ENABLE_CONNECT_UNIX
 int connect_unix(const char* path) {
 	struct sockaddr_un addr;
 	int fd = -1;
@@ -241,6 +241,13 @@ int connect_unix(const char* path) {
  * it will be run after the child has fork()ed, and is passed exec_data.
  * If ret_errfd == NULL then stderr will not be captured.
  * ret_pid can be passed as  NULL to discard the pid. */
+#ifdef __MINGW32__
+int spawn_command(__attribute__((unused)) void (*exec_fn)(void *user_data), void *UNUSED(exec_data),
+		int *UNUSED(ret_writefd), int *UNUSED(ret_readfd), int *UNUSED(ret_errfd), pid_t *UNUSED(ret_pid)) {
+	errno = ENOSYS; /* TODO: implement this */
+	return DROPBEAR_FAILURE;
+}
+#else
 int spawn_command(void(*exec_fn)(void *user_data), void *exec_data,
 		int *ret_writefd, int *ret_readfd, int *ret_errfd, pid_t *ret_pid) {
 	int infds[2];
@@ -328,6 +335,7 @@ int spawn_command(void(*exec_fn)(void *user_data), void *exec_data,
 		return DROPBEAR_SUCCESS;
 	}
 }
+#endif /* !MINGW32 */
 
 /* Runs a command with "sh -c". Will close FDs (except stdin/stdout/stderr) and
  * re-enabled SIGPIPE. If cmd is NULL, will run a login shell.
@@ -357,10 +365,12 @@ void run_shell_command(const char* cmd, unsigned int maxfd, char* usershell) {
 		argv[1] = NULL;
 	}
 
+#ifndef __MINGW32__
 	/* Re-enable SIGPIPE for the executed process */
 	if (signal(SIGPIPE, SIG_DFL) == SIG_ERR) {
 		dropbear_exit("signal() error");
 	}
+#endif
 
 	/* close file descriptors except stdin/stdout/stderr
 	 * Need to be sure FDs are closed here to avoid reading files as root */
@@ -559,6 +569,9 @@ void * m_realloc(void* ptr, size_t size) {
 	return ret;
 }
 
+#ifdef __MINGW32__
+void setnonblocking(int UNUSED(fd)) { }
+#else
 void setnonblocking(int fd) {
 
 	TRACE(("setnonblocking: %d", fd))
@@ -574,11 +587,14 @@ void setnonblocking(int fd) {
 	}
 	TRACE(("leave setnonblocking"))
 }
+#endif /* !MINGW32 */
 
 void disallow_core() {
+#ifdef HAVE_SYS_RESOURCE_H
 	struct rlimit lim;
 	lim.rlim_cur = lim.rlim_max = 0;
 	setrlimit(RLIMIT_CORE, &lim);
+#endif
 }
 
 /* Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE, with the result in *val */
@@ -601,13 +617,22 @@ int m_str_to_uint(const char* str, unsigned int *val) {
 /* Returns malloced path. inpath beginning with '/' is returned as-is,
 otherwise home directory is prepended */
 char * expand_homedir_path(const char *inpath) {
-	struct passwd *pw = NULL;
 	if (inpath[0] != '/') {
+		const char *home = NULL;
+#ifdef __MINGW32__
+		home = getenv("HOME");
+		if (!home)
+			home = getenv("USERPROFILE");
+#else
+		struct passwd *pw = NULL;
 		pw = getpwuid(getuid());
-		if (pw && pw->pw_dir) {
-			int len = strlen(inpath) + strlen(pw->pw_dir) + 2;
+		if (pw && pw->pw_dir)
+			home = pw->pw_dir;
+#endif
+		if (home) {
+			int len = strlen(inpath) + strlen(home) + 2;
 			char *buf = m_malloc(len);
-			snprintf(buf, len, "%s/%s", pw->pw_dir, inpath);
+			snprintf(buf, len, "%s/%s", home, inpath);
 			return buf;
 		}
 	}
@@ -681,6 +706,9 @@ time_t monotonic_now() {
 	return time(NULL);
 }
 
+#ifdef __MINGW32__
+void fsync_parent_dir(const char* UNUSED(fn)) { }
+#else
 void fsync_parent_dir(const char* fn) {
 #ifdef HAVE_LIBGEN_H
 	char *fn_dir = m_strdup(fn);
@@ -699,3 +727,4 @@ void fsync_parent_dir(const char* fn) {
 	free(fn_dir);
 #endif
 }
+#endif /* !MINGW32 */

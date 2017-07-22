@@ -42,11 +42,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+#ifdef HAVE_ARPA_INET_H
 #include <arpa/inet.h>
+#endif
 
+#ifndef WINSOCK_VERSION
 #ifndef HAVE_GETNAMEINFO
-int getnameinfo(const struct sockaddr *sa, size_t salen, char *host, 
+int getnameinfo(const struct sockaddr *sa, size_t UNUSED(salen), char *host, 
                 size_t hostlen, char *serv, size_t servlen, int flags)
 {
 	struct sockaddr_in *sin = (struct sockaddr_in *)sa;
@@ -106,6 +111,7 @@ gai_strerror(int err)
 	}
 }    
 #endif /* !HAVE_GAI_STRERROR */
+#endif /* !WINSOCK_VERSION */
 
 #ifndef HAVE_FREEADDRINFO
 void
@@ -121,6 +127,7 @@ freeaddrinfo(struct addrinfo *ai)
 }
 #endif /* !HAVE_FREEADDRINFO */
 
+#ifndef WINSOCK_VERSION
 #ifndef HAVE_GETADDRINFO
 static struct
 addrinfo *malloc_ai(int port, u_long addr, const struct addrinfo *hints)
@@ -235,3 +242,4 @@ getaddrinfo(const char *hostname, const char *servname,
 	return (EAI_NODATA);
 }
 #endif /* !HAVE_GETADDRINFO */
+#endif /* !WINSOCK_VERSION */

@@ -79,6 +79,7 @@ process_file(hash_state *hs, const char *filename,
 	{
 		int readlen, wantread;
 		unsigned char readbuf[4096];
+#ifndef __MINGW32__
 		if (!already_blocked && !prngd)
 		{
 			int res;
@@ -97,6 +98,7 @@ process_file(hash_state *hs, const char *filename,
 				already_blocked = 1;
 			}
 		}
+#endif /* !MINGW32 */
 
 		if (len == 0)
 		{

@@ -180,7 +180,9 @@ pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 	}
 	return 1;
 #else /* HAVE_DEV_PTS_AND_PTC */
-
+#ifdef __MINGW32__
+	return 0; /* TODO */
+#else
 	/* BSD-style pty code. */
 	char buf[64];
 	int i;
@@ -236,6 +238,7 @@ pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 	}
 	dropbear_log(LOG_WARNING, "Failed to open any /dev/pty?? devices");
 	return 0;
+#endif /* !MINGW32 */
 #endif /* HAVE_DEV_PTS_AND_PTC */
 #endif /* USE_DEV_PTMX */
 #endif /* HAVE__GETPTY */
@@ -247,6 +250,7 @@ pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 void
 pty_release(const char *tty_name)
 {
+#ifndef __MINGW32__
 	if (chown(tty_name, (uid_t) 0, (gid_t) 0) < 0
 			&& (errno != ENOENT)) {
 		dropbear_log(LOG_ERR,
@@ -257,6 +261,7 @@ pty_release(const char *tty_name)
 		dropbear_log(LOG_ERR,
 			"chmod %.100s 0666 failed: %.100s", tty_name, strerror(errno));
 	}
+#endif
 }
 
 /* Makes the tty the processes controlling tty and sets it to sane modes. */
@@ -264,6 +269,7 @@ pty_release(const char *tty_name)
 void
 pty_make_controlling_tty(int *ttyfd, const char *tty_name)
 {
+#ifndef __MINGW32__
 	int fd;
 #ifdef USE_VHANGUP
 	void *old;
@@ -335,6 +341,7 @@ pty_make_controlling_tty(int *ttyfd, const char *tty_name)
 	} else {
 		close(fd);
 	}
+#endif /* !MINGW32 */
 }
 
 /* Changes the window size associated with the pty. */
@@ -343,6 +350,7 @@ void
 pty_change_window_size(int ptyfd, int row, int col,
 	int xpixel, int ypixel)
 {
+#ifndef __MINGW32__
 	struct winsize w;
 
 	w.ws_row = row;
@@ -350,11 +358,13 @@ pty_change_window_size(int ptyfd, int row, int col,
 	w.ws_xpixel = xpixel;
 	w.ws_ypixel = ypixel;
 	(void) ioctl(ptyfd, TIOCSWINSZ, &w);
+#endif
 }
 
 void
 pty_setowner(struct passwd *pw, const char *tty_name)
 {
+#ifndef __MINGW32__
 	struct group *grp;
 	gid_t gid;
 	mode_t mode;
@@ -409,4 +419,5 @@ pty_setowner(struct passwd *pw, const char *tty_name)
 			}
 		}
 	}
+#endif /* !MINGW32 */
 }

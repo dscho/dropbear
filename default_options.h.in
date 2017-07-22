@@ -62,8 +62,13 @@ much traffic. */
 #define DROPBEAR_SVR_REMOTETCPFWD 1
 
 /* Enable Authentication Agent Forwarding */
+#ifdef __MINGW32__
+#define DROPBEAR_SVR_AGENTFWD 0
+#define DROPBEAR_CLI_AGENTFWD 0
+#else
 #define DROPBEAR_SVR_AGENTFWD 1
 #define DROPBEAR_CLI_AGENTFWD 1
+#endif
 
 
 /* Note: Both DROPBEAR_CLI_PROXYCMD and DROPBEAR_CLI_NETCAT must be set to

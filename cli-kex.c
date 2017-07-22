@@ -231,11 +231,15 @@ static FILE* open_known_hosts_file(int * readonly)
 	homedir = getenv("HOME");
 
 	if (!homedir) {
+#ifdef __MINGW32__
+		homedir = getenv("USERPROFILE");
+#else
 		struct passwd * pw = NULL;
 		pw = getpwuid(getuid());
 		if (pw) {
 			homedir = pw->pw_dir;
 		}
+#endif /* !MINGW32 */
 	}
 
 	if (homedir) {
@@ -245,7 +249,11 @@ static FILE* open_known_hosts_file(int * readonly)
 
 		snprintf(filename, len+18, "%s/.ssh", homedir);
 		/* Check that ~/.ssh exists - easiest way is just to mkdir */
+#ifdef __MINGW32__
+		if (mkdir(filename) != 0) {
+#else
 		if (mkdir(filename, S_IRWXU) != 0) {
+#endif
 			if (errno != EEXIST) {
 				dropbear_log(LOG_INFO, "Warning: failed creating %s/.ssh: %s",
 						homedir, strerror(errno));

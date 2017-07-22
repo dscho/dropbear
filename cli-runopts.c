@@ -716,6 +716,10 @@ static void fill_own_user() {
 	uid_t uid;
 	struct passwd *pw = NULL; 
 
+#ifdef __MINGW32__
+	uid = 0;
+	cli_opts.own_user = m_strdup("unknown");
+#else
 	uid = getuid();
 
 	pw = getpwuid(uid);
@@ -725,7 +729,7 @@ static void fill_own_user() {
 		dropbear_log(LOG_INFO, "Warning: failed to identify current user. Trying anyway.");
 		cli_opts.own_user = m_strdup("unknown");
 	}
-
+#endif /* !MINGW32 */
 }
 
 #if DROPBEAR_CLI_ANYTCPFWD

@@ -156,7 +156,10 @@ strlcat(char *dst, const char *src, size_t siz)
 /* From NetBSD - daemonise a process */
 
 int daemon(int nochdir, int noclose) {
-
+#ifdef __MINGW32__
+	errno = ENOSYS;
+	return -1;
+#else
 	int fd;
 
 	switch (fork()) {
@@ -182,6 +185,7 @@ int daemon(int nochdir, int noclose) {
 			(void)close(fd);
 	}
 	return 0;
+#endif /* !MINGW32 */
 }
 #endif /* HAVE_DAEMON */
 

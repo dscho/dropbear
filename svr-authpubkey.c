@@ -329,6 +329,7 @@ static int checkpubkey(char* algo, unsigned int algolen,
 	snprintf(filename, len + 22, "%s/.ssh/authorized_keys", 
 				ses.authstate.pw_dir);
 
+#ifndef __MINGW32__
 	/* open the file as the authenticating user. */
 	origuid = getuid();
 	origgid = getgid();
@@ -336,13 +337,16 @@ static int checkpubkey(char* algo, unsigned int algolen,
 		(seteuid(ses.authstate.pw_uid)) < 0) {
 		dropbear_exit("Failed to set euid");
 	}
+#endif /* !MINGW32 */
 
 	authfile = fopen(filename, "r");
 
+#ifndef __MINGW32__
 	if ((seteuid(origuid)) < 0 ||
 		(setegid(origgid)) < 0) {
 		dropbear_exit("Failed to revert euid");
 	}
+#endif /* !MINGW32 */
 
 	if (authfile == NULL) {
 		goto out;

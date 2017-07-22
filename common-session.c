@@ -50,6 +50,32 @@ int sessinitdone = 0; /* GLOBAL */
 /* this is set when we get SIGINT or SIGTERM, the handler is in main.c */
 int exitflag = 0; /* GLOBAL */
 
+#ifdef __MINGW32__
+static int pipe(int filedes[2])
+{
+	HANDLE h[2];
+
+	/* this creates non-inheritable handles */
+	if (!CreatePipe(&h[0], &h[1], NULL, 8192)) {
+		errno = EPERM;
+		return -1;
+	}
+	filedes[0] = _open_osfhandle((int)(intptr_t)h[0], O_NOINHERIT);
+	if (filedes[0] < 0) {
+		CloseHandle(h[0]);
+		CloseHandle(h[1]);
+		return -1;
+	}
+	filedes[1] = _open_osfhandle((int)(intptr_t)h[1], O_NOINHERIT);
+	if (filedes[1] < 0) {
+		close(filedes[0]);
+		CloseHandle(h[1]);
+		return -1;
+	}
+	return 0;
+}
+#endif
+
 /* called only at the start of a session, set up initial state */
 void common_session_init(int sock_in, int sock_out) {
 	time_t now;
@@ -594,6 +620,14 @@ void fill_passwd(const char* username) {
 	if (ses.authstate.pw_passwd)
 		m_free(ses.authstate.pw_passwd);
 
+#ifdef __MINGW32__
+	ses.authstate.pw_uid = 0;
+	ses.authstate.pw_gid = 0;
+	ses.authstate.pw_name = m_strdup(username);
+	ses.authstate.pw_dir = m_strdup("TODO");
+	ses.authstate.pw_shell = m_strdup("TODO");
+	ses.authstate.pw_passwd = m_strdup("*");
+#else
 	pw = getpwnam(username);
 	if (!pw) {
 		return;
@@ -618,6 +652,7 @@ void fill_passwd(const char* username) {
 		}
 		ses.authstate.pw_passwd = m_strdup(passwd_crypt);
 	}
+#endif
 }
 
 /* Called when channels are modified */

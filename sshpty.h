@@ -19,6 +19,8 @@
 #ifndef SSHPTY_H
 #define SSHPTY_H
 
+struct passwd;
+
 int	 pty_allocate(int *, int *, char *, int);
 void	 pty_release(const char *);
 void	 pty_make_controlling_tty(int *, const char *);

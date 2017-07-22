@@ -95,7 +95,7 @@ static void cli_closechansess(struct Channel *UNUSED(channel)) {
 /* Taken from OpenSSH's sshtty.c:
  * RCSID("OpenBSD: sshtty.c,v 1.5 2003/09/19 17:43:35 markus Exp "); */
 static void cli_tty_setup() {
-
+#ifndef __MINGW32__
 	struct termios tio;
 
 	TRACE(("enter cli_pty_setup"))
@@ -130,10 +130,11 @@ static void cli_tty_setup() {
 
 	cli_ses.tty_raw_mode = 1;
 	TRACE(("leave cli_tty_setup"))
+#endif /* !MINGW32 */
 }
 
 void cli_tty_cleanup() {
-
+#ifndef __MINGW32__
 	TRACE(("enter cli_tty_cleanup"))
 
 	if (cli_ses.tty_raw_mode == 0) {
@@ -148,10 +149,11 @@ void cli_tty_cleanup() {
 	}
 
 	TRACE(("leave cli_tty_cleanup"))
+#endif /* !MINGW32 */
 }
 
 static void put_termcodes() {
-
+#ifndef __MINGW32__
 	struct termios tio;
 	unsigned int sshcode;
 	const struct TermCode *termcode;
@@ -223,10 +225,11 @@ static void put_termcodes() {
 	buf_setpos(ses.writepayload, bufpos2); /* Back where we were */
 
 	TRACE(("leave put_termcodes"))
+#endif /* !MINGW32 */
 }
 
 static void put_winsize() {
-
+#ifndef __MINGW32__
 	struct winsize ws;
 
 	if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) < 0) {
@@ -241,6 +244,7 @@ static void put_winsize() {
 	buf_putint(ses.writepayload, ws.ws_row); /* Rows */
 	buf_putint(ses.writepayload, ws.ws_xpixel); /* Width */
 	buf_putint(ses.writepayload, ws.ws_ypixel); /* Height */
+#endif /* !MINGW32 */
 
 }
 
@@ -296,10 +300,12 @@ static void send_chansess_pty_req(struct Channel *channel) {
 
 	encrypt_packet();
 
+#ifndef __MINGW32__
 	/* Set up a window-change handler */
 	if (signal(SIGWINCH, sigwinch_handler) == SIG_ERR) {
 		dropbear_exit("Signal error");
 	}
+#endif /* !MINGW32 */
 	TRACE(("leave send_chansess_pty_req"))
 }
 
@@ -441,7 +447,9 @@ do_escape(unsigned char c) {
 		case 0x1a:
 			/* ctrl-z */
 			cli_tty_cleanup();
+#ifndef __MINGW32__
 			kill(getpid(), SIGTSTP);
+#endif /* !MINGW32 */
 			/* after continuation */
 			cli_tty_setup();
 			cli_ses.winchange = 1;
